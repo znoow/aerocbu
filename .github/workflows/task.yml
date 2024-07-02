@@ -1,0 +1,34 @@
+name: Za Task
+
+on:
+  schedule:
+    - cron: "0 16 * * *"
+  push:
+    branches:
+      - main
+  watch:
+    types: [started]
+  workflow_dispatch:
+
+jobs:
+  za-task:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Obtain info
+        run: |
+          wget -O IG-Helper.user.js https://update.greasyfork.org/scripts/404535/IG%20Helper.user.js && sed -i 's|https://code.jquery.com/jquery-3.7.1.min.js#sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=|https://code.jquery.com/jquery-4.0.0-beta.min.js|' IG-Helper.user.js && sed -i 's|https://update.greasyfork.org/scripts/404535/IG%20Helper.user.js|https://raw.githubusercontent.com/znoow/aerocbu/main/IG-Helper.user.js|' IG-Helper.user.js && sed -i '/(function(\$) {/a\setTimeout(() => {\n    setInterval(() => { reloadScript?.(); }, 600000);' IG-Helper.user.js && sed -i '/GL_observer.disconnect();/ { s|^\( *\)GL_observer.disconnect();|\1GL_observer.takeRecords();\n&| }' IG-Helper.user.js && sed -i -e '$i\}, 20000);' IG-Helper.user.js
+
+      - name: Remove all commits
+        run: |
+          git config --global user.email 93003259+znoow@users.noreply.github.com
+          git config --global user.name znoow
+          git checkout --orphan new-branch
+          git add .
+          git commit -m "First commit"
+          git branch -D main
+          git branch -m main
+          git push -f origin main
