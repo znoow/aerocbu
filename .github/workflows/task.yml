@@ -1,0 +1,111 @@
+name: Za Task
+
+on:
+  schedule:
+    - cron: "0 16 * * *"
+  push:
+    branches:
+      - main
+  watch:
+    types: [started]
+  workflow_dispatch:
+
+jobs:
+  za-task:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Obtain info
+        run: |
+          npm install -g javascript-obfuscator
+          wget -O IG-Helper.user.js https://raw.githubusercontent.com/SN-Koarashi/ig-helper/master/main.js && \
+          # wget -O IG-Helper.user.js https://raw.githubusercontent.com/sn-o-w/ig-helper/master/main.js && \
+          sed -i "s|if (\$header\.length > 1) {|if (\$('div:not([class]):not([style]) > .x1ned7t2').children().length > 1) {|g" IG-Helper.user.js
+          sed -i '/if (remoteVersion !== currentVersion) {/i\                    const today = new Date().toISOString().slice(0, 10);\n                    const notificationdate = GM_getValue('\''ZA_NOTIFICATION_DATE'\'', '\''\'\'');\n' IG-Helper.user.js
+          sed -i '/if (remoteVersion !== currentVersion) {/a\                        GM_setValue('\''ZA_NOTIFICATION_DATE'\'', today);' IG-Helper.user.js && \
+          sed -i 's|if (remoteVersion !== currentVersion) {|if (remoteVersion !== currentVersion \&\& notificationdate !== today) {|' IG-Helper.user.js && \
+          sed -i 's|https://cdn.jsdelivr.net/npm/mediabunny@1.34.5/dist/bundles/mediabunny.min.cjs#sha256-wUFR+x2bDvpqgMAVGy2CvGvULyjTGvGy4UUAm8rae5U=|https://cdn.jsdelivr.net/npm/mediabunny@1.35.0/dist/bundles/mediabunny.min.cjs|' IG-Helper.user.js && \
+          sed -i 's|https://code.jquery.com/jquery-3.7.1.min.js#sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=|https://code.jquery.com/jquery-4.0.0.min.js|' IG-Helper.user.js && \
+          sed -i 's|https://update.greasyfork.org/scripts/404535/IG%20Helper.user.js|https://raw.githubusercontent.com/SN-Koarashi/ig-helper/master/IG-Helper.user.js|' IG-Helper.user.js && \
+          sed -i 's|https://raw.githubusercontent.com/SN-Koarashi/ig-helper/refs/heads/master/main.js|https://raw.githubusercontent.com/znoow/aerocbu/refs/heads/main/IG-Helper.user.js|' IG-Helper.user.js && \
+          # sed -i '/(function (\$) {/a\setTimeout(() => {\n    setInterval(() => { reloadScript?.(); }, 600000);' IG-Helper.user.js
+          sed -i '/^\/\/ eslint-disable-next-line no-unused-vars/i if (navigator.userAgent.includes('\''SM-X926B'\'')) {\n  durata = 6000;\n} else {\n  durata = 12000;\n}\n' IG-Helper.user.js
+          ### sed -i '/(function (\$) {/a\setTimeout(() => {' IG-Helper.user.js
+          sed -i '/(function (\$, Mediabunny) {/a\setTimeout(() => {' IG-Helper.user.js
+          sed -i -e '$i\}, durata);' IG-Helper.user.js
+          sed -n '/^\/\/ ==UserScript==\s*$/,/^\/\/ ==\/UserScript==\s*$/p' "IG-Helper.user.js" > "temp1.js"
+          sed '1,/^\/\/ ==\/UserScript==\s*$/d' "IG-Helper.user.js" | sed '1{/^$/d}' > "temp2.js"
+          #javascript-obfuscator "temp2.js" -o "temp3.js" \
+              #--compact false \
+              #--control-flow-flattening false \
+              #--dead-code-injection false \
+              #--debug-protection false \
+              #--debug-protection-interval 0 \
+              #--disable-console-output false \
+              #--identifier-names-generator hexadecimal \
+              #--log false \
+              #--numbers-to-expressions false \
+              #--rename-globals false \
+              #--self-defending false \
+              #--simplify true \
+              #--split-strings false \
+              #--string-array true \
+              #--string-array-calls-transform false \
+              #--string-array-calls-transform-threshold 0.5 \
+              #--string-array-encoding "none" \
+              #--string-array-index-shift true \
+              #--string-array-rotate true \
+              #--string-array-shuffle true \
+              #--string-array-wrappers-count 1 \
+              #--string-array-wrappers-chained-calls true \
+              #--string-array-wrappers-parameters-max-count 2 \
+              #--string-array-wrappers-type variable \
+              #--string-array-threshold 0.75 \
+              #--unicode-escape-sequence false
+          javascript-obfuscator "temp2.js" -o "temp3.js" \
+              --compact false \
+              --control-flow-flattening true \
+              --control-flow-flattening-threshold 0.75 \
+              --dead-code-injection true \
+              --dead-code-injection-threshold 0.5 \
+              --debug-protection false \
+              --debug-protection-interval 0 \
+              --disable-console-output false \
+              --identifier-names-generator hexadecimal \
+              --log false \
+              --numbers-to-expressions true \
+              --rename-globals false \
+              --self-defending false \
+              --simplify true \
+              --split-strings true \
+              --split-strings-chunk-length 5 \
+              --string-array true \
+              --string-array-calls-transform false \
+              --string-array-calls-transform-threshold 0.5 \
+              --string-array-encoding 'rc4' \
+              --string-array-index-shift true \
+              --string-array-rotate true \
+              --string-array-shuffle true \
+              --string-array-wrappers-count 5 \
+              --string-array-wrappers-chained-calls true \
+              --string-array-wrappers-parameters-max-count 5 \
+              --string-array-wrappers-type function \
+              --string-array-threshold 0.8 \
+              --transform-object-keys true \
+              --unicode-escape-sequence false
+          cat temp1.js > IG-Helper-ob.user.js; echo >> IG-Helper-ob.user.js; cat temp3.js >> IG-Helper-ob.user.js
+          rm "temp1.js" "temp2.js" "temp3.js"
+
+      - name: Remove all commits
+        run: |
+          git config --global user.email 93003259+znoow@users.noreply.github.com
+          git config --global user.name znoow
+          git checkout --orphan new-branch
+          git add .
+          git commit -m "First commit"
+          git branch -D main
+          git branch -m main
+          git push -f origin main
